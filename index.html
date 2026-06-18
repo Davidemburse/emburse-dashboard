@@ -306,31 +306,32 @@ function loadData() {
   document.getElementById("sync-status").textContent = "";
   hideErr();
 
-  var url = API + "accounts?select=id,company_name,assignment_type,icp_tier,source,is_mapped," +
-            "ae_team(name),sectors(name),countries(name)" +
-            "&order=company_name.asc";
+  // Supabase permite subir el límite por defecto con el parámetro limit
+  var url = API + "accounts" +
+    "?select=id,company_name,assignment_type,icp_tier,source,is_mapped," +
+    "ae_team(name),sectors(name),countries(name)" +
+    "&order=company_name.asc" +
+    "&limit=3000";
 
-  var h = headers();
-  h["Range"] = "0-2999";
-  h["Range-Unit"] = "items";
-  fetch(url, { headers: h })
+  fetch(url, { headers: headers() })
   .then(function(r) {
-    if (!r.ok) throw new Error("HTTP " + r.status);
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + r.statusText);
     return r.json();
   })
   .then(function(data) {
+    if (!Array.isArray(data)) throw new Error("Respuesta inesperada: " + JSON.stringify(data).slice(0,100));
     allRows = data.map(function(r) {
       var name = (r.company_name || "").replace(/^["']+|["']+$/g, "").trim();
       return {
         id:     r.id,
         n:      name,
-        ae:     (r.ae_team    && r.ae_team.name)    ? r.ae_team.name.toLowerCase() : "rr",
-        s:      (r.sectors    && r.sectors.name)    ? r.sectors.name    : "-",
+        ae:     (r.ae_team   && r.ae_team.name)   ? r.ae_team.name.toLowerCase() : "rr",
+        s:      (r.sectors   && r.sectors.name)   ? r.sectors.name   : "-",
         t:      r.assignment_type || "-",
         tier:   r.icp_tier        || "-",
         hc:     HC[r.icp_tier]    || "-",
-        c:      (r.countries  && r.countries.name)  ? r.countries.name  : "-",
-        src:    r.source      || "-",
+        c:      (r.countries && r.countries.name) ? r.countries.name : "-",
+        src:    r.source     || "-",
         mapped: r.is_mapped,
       };
     });
@@ -342,8 +343,8 @@ function loadData() {
     render();
   })
   .catch(function(e) {
-    showErr("Error: " + e.message + ". Verifica las políticas RLS.");
-    document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudieron cargar los datos.</td></tr>';
+    showErr("Error conectando: " + e.message);
+    document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">Error: ' + e.message + '</td></tr>';
   });
 }
 
