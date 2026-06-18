@@ -283,12 +283,12 @@ var PER       = 25;
 
 /* ── API helpers ── */
 function headers() {
-  return {
-    "apikey": SUPABASE_KEY,
-    "Authorization": "Bearer " + SUPABASE_KEY,
-    "Content-Type": "application/json",
-    "Prefer": "return=representation"
-  };
+  var h = {};
+  h["apikey"] = SUPABASE_KEY;
+  h["Authorization"] = "Bearer " + SUPABASE_KEY;
+  h["Content-Type"] = "application/json";
+  h["Prefer"] = "return=representation";
+  return h;
 }
 
 function showErr(msg) {
