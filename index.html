@@ -216,7 +216,7 @@ td.mu{color:var(--tx2);font-size:12px;}
         <th data-col="icp_tier"        onclick="sortBy('icp_tier')">Tier<span class="si"></span></th>
         <th data-col="country_id"      onclick="sortBy('country_id')">Pa&iacute;s<span class="si"></span></th>
         <th data-col="source"          onclick="sortBy('source')">Fuente<span class="si"></span></th>
-        <th <th>Reasignar</th>
+        <th>Reasignar</th>
       </tr></thead>
       <tbody id="tb"><tr><td colspan="9" class="loading"><span class="loader"></span>Conectando con Supabase...</td></tr></tbody>
     </table>
@@ -454,8 +454,6 @@ function draw() {
     var cur     = effAE(r);
     var changed = !!changes[r.id];
     var rrTag   = r.t === "round_robin" ? '<span class="badge br" style="font-size:10px;margin-left:4px">RR</span>' : "";
-    // mapIcon removedfont-size:14px">\u2713</span>'
-      : '<span style="color:var(--am-tx);font-size:14px">\u25cb</span>';
     var opts = AES.map(function(ae) {
       return '<option value="' + ae + '"' + (ae === cur ? ' selected' : '') + '>' +
              ae.charAt(0).toUpperCase() + ae.slice(1) + '</option>';
