@@ -302,57 +302,25 @@ function hideErr() {
 
 /* ── Load all accounts with joined ae and sector names ── */
 function loadData() {
-  document.getElementById("tb").innerHTML = '<tr><td colspan="9" class="loading"><span class="loader"></span>Cargando desde Supabase...</td></tr>';
+  document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="loading"><span class="loader"></span>Conectando...</td></tr>';
   document.getElementById("sync-status").textContent = "";
   hideErr();
 
   var url = API + "accounts?select=id,company_name,assignment_type,icp_tier,source,is_mapped," +
-            "ae_team(name)," +
-            "sectors(name)," +
-            "countries(name)" +
+            "ae_team(name),sectors(name),countries(name)" +
             "&order=company_name.asc";
 
-  var allData = [];
-
-  function fetchPage(from) {
-    var to = from + 999;
-    fetch(url, {
-      headers: Object.assign({}, headers(), {
-        "Range":      from + "-" + to,
-        "Range-Unit": "items",
-        "Prefer":     "count=exact"
-      })
-    })
-    .then(function(r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      var cr    = r.headers.get("Content-Range") || "";
-      var total = parseInt((cr.split("/")[1] || "0"), 10) || 99999;
-      return r.json().then(function(data) { return { data: data, total: total }; });
-    })
-    .then(function(res) {
-      allData = allData.concat(res.data);
-      if (res.data.length === 1000 && allData.length < res.total) {
-        fetchPage(from + 1000);
-      } else {
-        processData(allData);
-      }
-    })
-    .catch(function(e) {
-      showErr("Error: " + e.message + ". Verifica las pol\u00edticas RLS.");
-      document.getElementById("tb").innerHTML = '<tr><td colspan="9" class="empty">No se pudieron cargar los datos.</td></tr>';
-    });
-  }
-
-  function processData(data) {
-    // Deduplicar por id (solapamiento entre páginas)
-    var seen = {};
-    data = data.filter(function(r) {
-      if (seen[r.id]) return false;
-      seen[r.id] = true;
-      return true;
-    });
+  var h = headers();
+  h["Range"] = "0-2999";
+  h["Range-Unit"] = "items";
+  fetch(url, { headers: h })
+  .then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
+  .then(function(data) {
     allRows = data.map(function(r) {
-      var name = (r.company_name || "").replace(/^["\']+|["\']+$/g, "").trim();
+      var name = (r.company_name || "").replace(/^["']+|["']+$/g, "").trim();
       return {
         id:     r.id,
         n:      name,
@@ -366,15 +334,17 @@ function loadData() {
         mapped: r.is_mapped,
       };
     });
-    document.getElementById("sync-status").textContent = "\u2713 Supabase";
+    document.getElementById("sync-status").textContent = "✓ Supabase";
     document.getElementById("data-note").textContent   = allRows.length + " cuentas cargadas";
     document.getElementById("total-lbl").innerHTML     = "<strong>" + allRows.length + "</strong> cuentas en Supabase";
     buildFilters();
     updMetrics();
     render();
-  }
-
-  fetchPage(0);
+  })
+  .catch(function(e) {
+    showErr("Error: " + e.message + ". Verifica las políticas RLS.");
+    document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudieron cargar los datos.</td></tr>';
+  });
 }
 
 /* ── Save AE changes to Supabase ── */
