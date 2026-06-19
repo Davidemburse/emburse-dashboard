@@ -276,64 +276,75 @@ var sortDir = 1;
 var PER = 25;
 
 function apiFetch(path) {
-  var hdrs = new Headers();
-  hdrs.append("apikey", KEY);
-  hdrs.append("Authorization", "Bearer " + KEY);
-  hdrs.append("Content-Type", "application/json");
-  return fetch(URL_BASE + path, {method:"GET", headers:hdrs});
+  return fetch(URL_BASE + path, {
+    method: "GET",
+    headers: {"apikey": KEY, "Authorization": "Bearer " + KEY}
+  });
 }
 
 function apiPatch(path, body) {
-  var hdrs = new Headers();
-  hdrs.append("apikey", KEY);
-  hdrs.append("Authorization", "Bearer " + KEY);
-  hdrs.append("Content-Type", "application/json");
-  hdrs.append("Prefer", "return=minimal");
-  return fetch(URL_BASE + path, {method:"PATCH", headers:hdrs, body:JSON.stringify(body)});
+  return fetch(URL_BASE + path, {
+    method: "PATCH",
+    headers: {"apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json", "Prefer": "return=minimal"},
+    body: JSON.stringify(body)
+  });
 }
 
 function loadData() {
   document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="loading"><span class="loader"></span>Conectando con Supabase...</td></tr>';
   document.getElementById("ss").textContent = "";
-  var eb = document.getElementById("errbar");
-  eb.classList.remove("on");
+  document.getElementById("errbar").classList.remove("on");
 
-  var path = "accounts?select=id,company_name,assignment_type,icp_tier,source,ae_team(name),sectors(name),countries(name)&order=company_name.asc&limit=3000";
+  var base = URL_BASE + "accounts?select=id,company_name,assignment_type,icp_tier,source," +
+             "ae_team(name),sectors(name),countries(name)&order=company_name.asc";
+  var allData = [];
 
-  apiFetch(path)
-    .then(function(res) {
-      if (!res.ok) {
-        return res.text().then(function(t) { throw new Error("HTTP " + res.status + ": " + t.slice(0,200)); });
+  function fetchPage(offset) {
+    fetch(base + "&limit=1000&offset=" + offset, {
+      method: "GET",
+      headers: {
+        "apikey": KEY,
+        "Authorization": "Bearer " + KEY
       }
-      return res.json();
     })
-    .then(function(data) {
-      allRows = data.map(function(r) {
-        return {
-          id:   r.id,
-          n:    (r.company_name||"").replace(/^["']+|["']+$/g,"").trim(),
-          ae:   (r.ae_team   && r.ae_team.name)   ? r.ae_team.name.toLowerCase()   : "rr",
-          s:    (r.sectors   && r.sectors.name)   ? r.sectors.name                 : "-",
-          t:    r.assignment_type || "-",
-          tier: r.icp_tier        || "-",
-          hc:   HC[r.icp_tier]   || "-",
-          c:    (r.countries && r.countries.name) ? r.countries.name               : "-",
-          src:  r.source         || "-"
-        };
+      .then(function(res) {
+        if (!res.ok) return res.text().then(function(t){throw new Error("HTTP "+res.status+": "+t.slice(0,100));});
+        return res.json();
+      })
+      .then(function(data) {
+        allData = allData.concat(data);
+        if (data.length === 1000) {
+          fetchPage(offset + 1000);
+        } else {
+          allRows = allData.map(function(r) {
+            return {
+              id:   r.id,
+              n:    (r.company_name||"").replace(/^["']+|["']+$/g,"").trim(),
+              ae:   (r.ae_team   && r.ae_team.name)   ? r.ae_team.name.toLowerCase() : "rr",
+              s:    (r.sectors   && r.sectors.name)   ? r.sectors.name               : "-",
+              t:    r.assignment_type || "-",
+              tier: r.icp_tier        || "-",
+              hc:   HC[r.icp_tier]   || "-",
+              c:    (r.countries && r.countries.name) ? r.countries.name             : "-",
+              src:  r.source         || "-"
+            };
+          });
+          document.getElementById("ss").textContent = "\u2713 Supabase";
+          document.getElementById("dnote").textContent = allRows.length + " cuentas cargadas";
+          document.getElementById("tlbl").innerHTML = "<strong>" + allRows.length + "</strong> cuentas en Supabase";
+          buildFilters();
+          updMetrics();
+          render();
+        }
+      })
+      .catch(function(e) {
+        document.getElementById("errbar").textContent = "Error: " + e.message;
+        document.getElementById("errbar").classList.add("on");
+        document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudo conectar.</td></tr>';
       });
-      document.getElementById("ss").textContent = "\u2713 Supabase";
-      document.getElementById("dnote").textContent = allRows.length + " cuentas";
-      document.getElementById("tlbl").innerHTML = "<strong>" + allRows.length + "</strong> cuentas en Supabase";
-      buildFilters();
-      updMetrics();
-      render();
-    })
-    .catch(function(e) {
-      var eb = document.getElementById("errbar");
-      eb.textContent = "Error: " + e.message;
-      eb.classList.add("on");
-      document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudo conectar.</td></tr>';
-    });
+  }
+
+  fetchPage(0);
 }
 
 function saveChanges() {
