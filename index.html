@@ -32,7 +32,7 @@
   --gn-bg:#27500A;--gn-tx:#C0DD97;
 }}
 body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.5;}
-.shell{max-width:1200px;margin:0 auto;padding:24px 20px 64px;}
+.shell{max-width:1240px;margin:0 auto;padding:24px 20px 64px;}
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid var(--bd);}
 .hdr-title{font-size:15px;font-weight:500;}
 .rbadge{padding:3px 11px;border-radius:20px;font-size:11px;font-weight:500;}
@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .rb-ae{background:var(--bl-bg);color:var(--bl-tx);}
 .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:9px 13px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx2);flex-wrap:wrap;}
 .toolbar select{font-size:12px;font-family:inherit;padding:3px 8px;border-radius:var(--r);border:0.5px solid var(--bd2);background:var(--sf);color:var(--tx);}
-.nav{display:flex;gap:3px;margin-bottom:16px;}
+.nav{display:flex;gap:3px;margin-bottom:16px;flex-wrap:wrap;}
 .ntab{padding:6px 16px;font-size:13px;border-radius:var(--r);cursor:pointer;border:none;background:transparent;color:var(--tx2);font-family:inherit;}
 .ntab:hover,.ntab.on{background:var(--s2);color:var(--tx);}
 .ntab.on{font-weight:500;}
@@ -91,6 +91,8 @@ td.mu{color:var(--tx2);font-size:12px;}
 .bt3{background:var(--co-bg);color:var(--co-tx);}
 .aes{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;}
 .ae-sel{font-size:11px;font-family:inherit;padding:3px 7px;border-radius:var(--r);border:0.5px solid var(--bd2);background:var(--sf);color:var(--tx);cursor:pointer;}
+.status-sel{font-size:13px;border:none;background:transparent;cursor:pointer;padding:0;}
+.notes-input{font-size:12px;font-family:inherit;padding:3px 7px;border-radius:var(--r);border:0.5px solid var(--bd2);background:var(--sf);color:var(--tx);width:140px;}
 .pager{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--tx2);}
 .btn{padding:5px 14px;font-size:12px;font-family:inherit;border:0.5px solid var(--bd2);border-radius:var(--r);background:var(--sf);color:var(--tx);cursor:pointer;}
 .btn:hover{background:var(--s2);}
@@ -116,7 +118,19 @@ td.mu{color:var(--tx2);font-size:12px;}
 .pb-seg{height:100%;}
 .pbar-note{font-size:10px;color:var(--tx3);margin-top:5px;}
 .vtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
-
+/* Scoring */
+.score-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;}
+@media(max-width:700px){.score-grid{grid-template-columns:1fr;}}
+.score-card{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rl);padding:16px 18px;}
+.score-card h3{font-size:13px;font-weight:500;margin-bottom:14px;color:var(--tx2);}
+.score-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.score-bar-label{font-size:12px;width:80px;flex-shrink:0;}
+.score-bar-track{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.score-bar-val{font-size:11px;color:var(--tx2);width:40px;text-align:right;}
+.score-sector-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--bd);font-size:12px;}
+.score-sector-row:last-child{border-bottom:none;}
+/* Login */
 .login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
 .login-box{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rl);padding:32px 36px;width:320px;text-align:center;}
 .login-logo{font-size:15px;font-weight:500;margin-bottom:8px;}
@@ -129,8 +143,19 @@ td.mu{color:var(--tx2);font-size:12px;}
 </style>
 </head>
 <body>
-<div class="shell">
 
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Territory Dashboard &middot; Emburse LATAM</div>
+    <div class="login-sub">Introduce la contrase&ntilde;a de acceso</div>
+    <input class="login-input" type="password" id="loginInput" placeholder="&bull;&bull;&bull;&bull;" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Acceder</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="shell">
 <div class="hdr">
   <span class="hdr-title">Territory dashboard &middot; Emburse LATAM</span>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -156,10 +181,11 @@ td.mu{color:var(--tx2);font-size:12px;}
   </span>
 </div>
 
-<div class="nav">
+<div class="nav" id="main-nav">
   <button class="ntab on" data-tab="accounts" onclick="sTab(this)">Cuentas ATA</button>
   <button class="ntab"    data-tab="coverage" onclick="sTab(this)">Cobertura</button>
   <button class="ntab"    data-tab="sectors"  onclick="sTab(this)">Por sector</button>
+  <button class="ntab mgr-only" data-tab="scoring" onclick="sTab(this)">Scoring territorio</button>
 </div>
 
 <div class="ae-bar" id="aebar">
@@ -170,7 +196,7 @@ td.mu{color:var(--tx2);font-size:12px;}
 </div>
 
 <div class="metrics">
-  <div class="mc"><div class="mc-lbl">Total cuentas</div><div class="mc-val" id="mTot">-</div><div class="mc-sub">en Supabase</div><div class="mc-bar"><div class="mc-fill" id="mTotf" style="background:#5DCAA5;width:100%"></div></div></div>
+  <div class="mc"><div class="mc-lbl">Total cuentas</div><div class="mc-val" id="mTot">-</div><div class="mc-sub">en Supabase</div><div class="mc-bar"><div class="mc-fill" style="background:#5DCAA5;width:100%"></div></div></div>
   <div class="mc"><div class="mc-lbl">David</div><div class="mc-val" id="mD">-</div><div class="mc-sub" id="mDs"></div><div class="mc-bar"><div class="mc-fill" id="mDf" style="background:#1D9E75"></div></div></div>
   <div class="mc"><div class="mc-lbl">Daniela</div><div class="mc-val" id="mDa">-</div><div class="mc-sub" id="mDas"></div><div class="mc-bar"><div class="mc-fill" id="mDaf" style="background:#7F77DD"></div></div></div>
   <div class="mc"><div class="mc-lbl">Chema</div><div class="mc-val" id="mC">-</div><div class="mc-sub" id="mCs"></div><div class="mc-bar"><div class="mc-fill" id="mCf" style="background:#D85A30"></div></div></div>
@@ -179,11 +205,11 @@ td.mu{color:var(--tx2);font-size:12px;}
 
 <div class="err-bar" id="errbar"></div>
 
+<!-- ACCOUNTS -->
 <div class="panel on" id="panel-accounts">
   <div class="chg-bar" id="cbar">
-    <span id="ctxt">0 cuentas reasignadas</span>
+    <span id="ctxt">0 cambios pendientes</span>
     <button class="btn btn-sm" onclick="saveChanges()">Guardar en Supabase</button>
-    <button class="btn btn-sm" onclick="expChg()">Exportar CSV</button>
     <button class="btn btn-sm" onclick="resetChg()">Deshacer</button>
   </div>
   <div class="frow">
@@ -199,31 +225,40 @@ td.mu{color:var(--tx2);font-size:12px;}
     <label>Tier:</label>
     <select id="ftier" onchange="render()">
       <option value="">Todos</option>
-      <option value="T1">T1</option>
-      <option value="T2">T2</option>
-      <option value="T3">T3</option>
+      <option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option>
     </select>
     <label>Pa&iacute;s:</label>
     <select id="fpais" onchange="render()"><option value="">Todos</option></select>
+    <label>Estado:</label>
+    <select id="fstatus" onchange="render()">
+      <option value="">Todos</option>
+      <option value="caliente">&#x1F7E2; Caliente</option>
+      <option value="tibio">&#x1F7E1; Tibio</option>
+      <option value="frio">&#x1F534; Fr&iacute;o</option>
+      <option value="sin_contacto">&#x26AA; Sin contacto</option>
+    </select>
   </div>
   <div class="tbl-wrap">
     <table>
       <colgroup>
-        <col style="width:23%"><col style="width:21%"><col style="width:10%">
-        <col style="width:11%"><col style="width:7%"><col style="width:10%">
-        <col style="width:9%"><col style="width:9%">
+        <col style="width:18%"><col style="width:16%"><col style="width:9%">
+        <col style="width:9%"><col style="width:6%"><col style="width:8%">
+        <col style="width:8%"><col style="width:5%"><col style="width:6%">
+        <col style="width:15%">
       </colgroup>
       <thead><tr>
-        <th data-col="n"    onclick="sortBy('n')">Empresa<span class="si"></span></th>
-        <th data-col="s"    onclick="sortBy('s')">Sector<span class="si"></span></th>
-        <th data-col="ae"   onclick="sortBy('ae')">AE<span class="si"></span></th>
-        <th data-col="t"    onclick="sortBy('t')">Asignaci&oacute;n<span class="si"></span></th>
-        <th data-col="tier" onclick="sortBy('tier')">Tier<span class="si"></span></th>
-        <th data-col="c"    onclick="sortBy('c')">Pa&iacute;s<span class="si"></span></th>
-        <th data-col="src"  onclick="sortBy('src')">Fuente<span class="si"></span></th>
+        <th data-col="n"      onclick="sortBy('n')">Empresa<span class="si"></span></th>
+        <th data-col="s"      onclick="sortBy('s')">Sector<span class="si"></span></th>
+        <th data-col="ae"     onclick="sortBy('ae')">AE<span class="si"></span></th>
+        <th data-col="t"      onclick="sortBy('t')">Asignaci&oacute;n<span class="si"></span></th>
+        <th data-col="tier"   onclick="sortBy('tier')">Tier<span class="si"></span></th>
+        <th data-col="c"      onclick="sortBy('c')">Pa&iacute;s<span class="si"></span></th>
+        <th data-col="emp"    onclick="sortBy('emp')">Empleados<span class="si"></span></th>
+        <th data-col="status" onclick="sortBy('status')">Estado<span class="si"></span></th>
         <th>Reasignar</th>
+        <th>Notas</th>
       </tr></thead>
-      <tbody id="tb"><tr><td colspan="8" class="loading"><span class="loader"></span>Conectando con Supabase...</td></tr></tbody>
+      <tbody id="tb"><tr><td colspan="10" class="loading"><span class="loader"></span>Cargando datos...</td></tr></tbody>
     </table>
   </div>
   <div class="pager">
@@ -238,198 +273,282 @@ td.mu{color:var(--tx2);font-size:12px;}
   </div>
 </div>
 
+<!-- COVERAGE -->
 <div class="panel" id="panel-coverage">
   <div id="covGrid" class="cov-grid"></div>
   <div class="tbl-wrap">
     <table>
-      <colgroup><col style="width:12%"><col style="width:8%"><col style="width:9%"><col style="width:8%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:38%"></colgroup>
-      <thead><tr><th>AE</th><th>Total</th><th>Vertebral</th><th>Named</th><th>RR</th><th>T1</th><th>T2+T3</th><th>Sectores vertebrales</th></tr></thead>
+      <colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:26%"></colgroup>
+      <thead><tr><th>AE</th><th>Total</th><th>Vertebral</th><th>Named</th><th>RR</th><th>T1</th><th>T2+T3</th><th>Caliente</th><th>Tibio</th><th>Sectores vertebrales</th></tr></thead>
       <tbody id="covB"></tbody>
     </table>
   </div>
 </div>
 
+<!-- SECTORS -->
 <div class="panel" id="panel-sectors">
   <div class="tbl-wrap">
     <table>
-      <colgroup><col style="width:26%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:10%"><col style="width:10%"><col style="width:32%"></colgroup>
+      <colgroup><col style="width:24%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:36%"></colgroup>
       <thead><tr><th>Sector</th><th>Total</th><th>T1</th><th>T2</th><th>Tipo</th><th>AE dominante</th><th>Muestra</th></tr></thead>
       <tbody id="sectB"></tbody>
     </table>
   </div>
 </div>
 
+<!-- SCORING -->
+<div class="panel" id="panel-scoring">
+  <div class="score-grid">
+    <!-- Peso total por AE -->
+    <div class="score-card">
+      <h3>Peso de territorio por AE (suma scoring sectores)</h3>
+      <div id="scoreByAE"></div>
+    </div>
+    <!-- Cuentas T1 por AE -->
+    <div class="score-card">
+      <h3>Cuentas Tier 1 por AE</h3>
+      <div id="scoreT1"></div>
+    </div>
+  </div>
+  <!-- Tabla sectores con scoring -->
+  <div class="score-card" style="margin-bottom:16px;">
+    <h3>Scoring por sector (Peso PIB % &times; Intensidad de viaje)</h3>
+    <div class="tbl-wrap" style="border:none;">
+      <table>
+        <colgroup><col style="width:28%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:10%"><col style="width:20%"></colgroup>
+        <thead><tr>
+          <th>Sector</th><th>Scoring</th><th>Peso PIB %</th><th>Intensidad viaje</th>
+          <th>Cuentas</th><th>T1</th><th>AE owner</th>
+        </tr></thead>
+        <tbody id="scoreSectB"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <div class="login-logo">Territory Dashboard &middot; Emburse LATAM</div>
-    <div class="login-sub">Introduce la contrase&ntilde;a de acceso</div>
-    <input class="login-input" type="password" id="loginInput" placeholder="&bull;&bull;&bull;&bull;" maxlength="20"
-      onkeydown="if(event.key==='Enter')checkLogin()">
-    <button class="login-btn" onclick="checkLogin()">Acceder</button>
-    <div class="login-err" id="loginErr"></div>
-  </div>
 </div>
 
 <script>
 var URL_BASE = "https://ocbckgfjtfphsgdnwvmd.supabase.co/rest/v1/";
 var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jYmNrZ2ZqdGZwaHNnZG53dm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDA3NjQsImV4cCI6MjA5NzM3Njc2NH0.1jjf71Ttfhkdy_8ucHld3OdsBEQafc9tg8C13GC35vY";
 
-var HC = {"T1":">5,000","T2":"1,000-5,000","T3":"100-999"};
-var AES = ["david","daniela","chema","juanjo"];
-var VERT = {
+var HC    = {"T1":">5,000","T2":"1,000-5,000","T3":"100-999"};
+var AES   = ["david","daniela","chema","juanjo"];
+var VERT  = {
   david:["Seguros","Svcs. Consultoras","Sectores primario"],
   daniela:["Fundaciones/ONG","Log\u00edstica","Educaci\u00f3n"],
   chema:["Legal Services","Salud","Turismo"],
   juanjo:["Construcci\u00f3n","Farma","Tecnolog\u00eda"]
 };
-var AEBG = {david:"var(--td-bg)",daniela:"var(--pu-bg)",chema:"var(--co-bg)",juanjo:"var(--am-bg)"};
-var AETX = {david:"var(--td-tx)",daniela:"var(--pu-tx)",chema:"var(--co-tx)",juanjo:"var(--am-tx)"};
-var AECL = {david:"#1D9E75",daniela:"#7F77DD",chema:"#D85A30",juanjo:"#BA7517"};
+var AEBG  = {david:"var(--td-bg)",daniela:"var(--pu-bg)",chema:"var(--co-bg)",juanjo:"var(--am-bg)"};
+var AETX  = {david:"var(--td-tx)",daniela:"var(--pu-tx)",chema:"var(--co-tx)",juanjo:"var(--am-tx)"};
+var AECL  = {david:"#1D9E75",daniela:"#7F77DD",chema:"#D85A30",juanjo:"#BA7517"};
 
-var allRows = [];
-var changes = {};
-var active = {david:true,daniela:true,chema:true,juanjo:true};
-var curTab = "accounts";
-var curPage = 0;
-var sortCol = "n";
-var sortDir = 1;
-var PER = 25;
+// Scoring data from KAM segmentation
+var SECTOR_SCORING = [
+  {s:"Seguros",                                     scoring:2.05, pib:4.90,  int:"Media",    ae:"david",   t:"vertebral"},
+  {s:"Servicios profesionales (Consultoras)",       scoring:2.23, pib:2.3,   int:"Muy alta", ae:"david",   t:"vertebral"},
+  {s:"Sectores primario (miner\u00eda, pesquero, agr\u00edcola)", scoring:1.82, pib:7.4, int:"Baja", ae:"david", t:"vertebral"},
+  {s:"Fundaciones, ONG y tercer sector",            scoring:1.17, pib:2.1,   int:"Baja",     ae:"daniela", t:"vertebral"},
+  {s:"Log\u00edstica y transporte",                 scoring:2.60, pib:7.9,   int:"Muy alta", ae:"daniela", t:"vertebral"},
+  {s:"Sector educaci\u00f3n y universidades",       scoring:2.03, pib:3.8,   int:"Media",    ae:"daniela", t:"vertebral"},
+  {s:"Servicios profesionales (Legal Services)",   scoring:2.23, pib:2.3,   int:"Muy alta", ae:"chema",   t:"vertebral"},
+  {s:"Salud, belleza y hospitales",                 scoring:1.83, pib:2.8,   int:"Media",    ae:"chema",   t:"vertebral"},
+  {s:"Turismo, ocio y restauraci\u00f3n",           scoring:1.92, pib:3.1,   int:"Media",    ae:"chema",   t:"vertebral"},
+  {s:"Construcci\u00f3n e Infraestructuras",        scoring:2.22, pib:6.9,   int:"Media",    ae:"juanjo",  t:"vertebral"},
+  {s:"Farma y sector qu\u00edmico",                 scoring:1.96, pib:1.05,  int:"Muy alta", ae:"juanjo",  t:"vertebral"},
+  {s:"Tecnolog\u00eda y Utilities",                 scoring:2.32, pib:3.5,   int:"Muy alta", ae:"juanjo",  t:"vertebral"},
+  {s:"Banca y Servicios Financieros",               scoring:2.01, pib:4.90,  int:"Media",    ae:null,      t:"named"},
+  {s:"Manufacturing y sector industrial",           scoring:2.65, pib:21.80, int:"Muy alta", ae:null,      t:"round_robin"},
+  {s:"Retail, venta al por mayor y CPG",            scoring:2.86, pib:19.4,  int:"Muy alta", ae:null,      t:"round_robin"},
+  {s:"Administraci\u00f3n P\u00fablica",            scoring:1.79, pib:3.6,   int:"Baja",     ae:null,      t:"round_robin"},
+  {s:"Otros",                                       scoring:1.52, pib:2.25,  int:"",         ae:null,      t:"round_robin"},
+];
 
-function apiFetch(path) {
-  return fetch(URL_BASE + path, {
-    method: "GET",
-    headers: {"apikey": KEY, "Authorization": "Bearer " + KEY}
-  });
+var STATUS_EMOJI = {caliente:"\u{1F7E2}",tibio:"\u{1F7E1}",frio:"\u{1F534}",sin_contacto:"\u26AA"};
+var STATUS_LABEL = {caliente:"Caliente",tibio:"Tibio",frio:"Fr\u00edo",sin_contacto:"Sin contacto"};
+
+var allRows  = [];
+var changes  = {};  // {id: {ae, status, notes}}
+var active   = {david:true,daniela:true,chema:true,juanjo:true};
+var curTab   = "accounts";
+var curPage  = 0;
+var sortCol  = "n";
+var sortDir  = 1;
+var PER      = 25;
+var curRole  = "manager";
+
+/* ── Auth ── */
+function checkLogin() {
+  if (document.getElementById("loginInput").value === "2026") {
+    document.getElementById("loginOverlay").style.display = "none";
+    sessionStorage.setItem("ata_auth","1");
+    loadData();
+  } else {
+    document.getElementById("loginErr").textContent = "Contrase\u00f1a incorrecta";
+    document.getElementById("loginInput").value = "";
+    document.getElementById("loginInput").focus();
+  }
 }
 
-function apiPatch(path, body) {
-  return fetch(URL_BASE + path, {
-    method: "PATCH",
-    headers: {"apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json", "Prefer": "return=minimal"},
-    body: JSON.stringify(body)
-  });
-}
-
+/* ── Load ── */
 function loadData() {
-  document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="loading"><span class="loader"></span>Conectando con Supabase...</td></tr>';
+  document.getElementById("tb").innerHTML = '<tr><td colspan="10" class="loading"><span class="loader"></span>Cargando datos...</td></tr>';
   document.getElementById("ss").textContent = "";
   document.getElementById("errbar").classList.remove("on");
 
-  var base = URL_BASE + "accounts?select=id,company_name,assignment_type,icp_tier,source," +
+  var base = URL_BASE + "accounts?select=id,company_name,assignment_type,icp_tier,source,employee_count,status,notes," +
              "ae_team(name),sectors(name),countries(name)&order=company_name.asc";
   var allData = [];
 
   function fetchPage(offset) {
     fetch(base + "&limit=1000&offset=" + offset, {
       method: "GET",
-      headers: {
-        "apikey": KEY,
-        "Authorization": "Bearer " + KEY
-      }
+      headers: {"apikey": KEY, "Authorization": "Bearer " + KEY}
     })
-      .then(function(res) {
-        if (!res.ok) return res.text().then(function(t){throw new Error("HTTP "+res.status+": "+t.slice(0,100));});
-        return res.json();
-      })
-      .then(function(data) {
-        allData = allData.concat(data);
-        if (data.length === 1000) {
-          fetchPage(offset + 1000);
-        } else {
-          allRows = allData.map(function(r) {
-            return {
-              id:   r.id,
-              n:    (r.company_name||"").replace(/^["']+|["']+$/g,"").trim(),
-              ae:   (r.ae_team   && r.ae_team.name)   ? r.ae_team.name.toLowerCase() : "rr",
-              s:    (r.sectors   && r.sectors.name)   ? r.sectors.name               : "-",
-              t:    r.assignment_type || "-",
-              tier: r.icp_tier        || "-",
-              hc:   HC[r.icp_tier]   || "-",
-              c:    (r.countries && r.countries.name) ? r.countries.name             : "-",
-              src:  r.source         || "-"
-            };
-          });
-          document.getElementById("ss").textContent = "\u2713 Supabase";
-          document.getElementById("dnote").textContent = allRows.length + " cuentas cargadas";
-          document.getElementById("tlbl").innerHTML = "<strong>" + allRows.length + "</strong> cuentas en Supabase";
-          buildFilters();
-          updMetrics();
-          render();
-        }
-      })
-      .catch(function(e) {
-        document.getElementById("errbar").textContent = "Error: " + e.message;
-        document.getElementById("errbar").classList.add("on");
-        document.getElementById("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudo conectar.</td></tr>';
+    .then(function(res) {
+      if (!res.ok) return res.text().then(function(t){throw new Error("HTTP "+res.status+": "+t.slice(0,100));});
+      return res.json();
+    })
+    .then(function(data) {
+      allData = allData.concat(data);
+      if (data.length === 1000) { fetchPage(offset + 1000); return; }
+      allRows = allData.map(function(r) {
+        return {
+          id:     r.id,
+          n:      (r.company_name||"").replace(/^["']+|["']+$/g,"").trim(),
+          ae:     (r.ae_team   && r.ae_team.name)   ? r.ae_team.name.toLowerCase()   : "rr",
+          s:      (r.sectors   && r.sectors.name)   ? r.sectors.name                 : "-",
+          t:      r.assignment_type || "-",
+          tier:   r.icp_tier        || "-",
+          emp:    r.employee_count  || null,
+          c:      (r.countries && r.countries.name) ? r.countries.name               : "-",
+          src:    r.source          || "-",
+          status: r.status          || "sin_contacto",
+          notes:  r.notes           || "",
+        };
       });
+      document.getElementById("ss").textContent = "\u2713 Supabase";
+      document.getElementById("dnote").textContent = allRows.length + " cuentas cargadas";
+      document.getElementById("tlbl").innerHTML = "<strong>" + allRows.length + "</strong> cuentas en Supabase";
+      buildFilters();
+      updMetrics();
+      render();
+    })
+    .catch(function(e) {
+      document.getElementById("errbar").textContent = "Error: " + e.message;
+      document.getElementById("errbar").classList.add("on");
+      document.getElementById("tb").innerHTML = '<tr><td colspan="10" class="empty">No se pudo conectar.</td></tr>';
+    });
   }
-
   fetchPage(0);
 }
 
+/* ── Save ── */
 function saveChanges() {
   var ids = Object.keys(changes);
   if (!ids.length) return;
   var done = 0;
-  ids.forEach(function(rowId) {
-    var newName = changes[rowId].charAt(0).toUpperCase() + changes[rowId].slice(1);
-    apiFetch("ae_team?name=eq." + encodeURIComponent(newName) + "&select=id")
-      .then(function(r) { return r.json(); })
-      .then(function(ae) {
-        if (!ae || !ae[0]) throw new Error("AE no encontrado");
-        return apiPatch("accounts?id=eq." + rowId, {ae_owner_id: ae[0].id});
-      })
-      .then(function() {
+  ids.forEach(function(id) {
+    var chg = changes[id];
+    var payload = {};
+    if (chg.ae !== undefined) {
+      // Need ae_owner_id — find from allRows original ae then patch
+      payload._newAEName = chg.ae.charAt(0).toUpperCase() + chg.ae.slice(1);
+    }
+    if (chg.status !== undefined) payload.status = chg.status;
+    if (chg.notes  !== undefined) payload.notes  = chg.notes;
+
+    function doPatch(p) {
+      fetch(URL_BASE + "accounts?id=eq." + id, {
+        method: "PATCH",
+        headers: {"apikey":KEY,"Authorization":"Bearer "+KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+        body: JSON.stringify(p)
+      }).then(function() {
         done++;
-        if (done === ids.length) { changes = {}; updChgBar(); loadData(); }
-      })
-      .catch(function(e) {
-        document.getElementById("errbar").textContent = "Error guardando: " + e.message;
+        if (done === ids.length) { changes={}; updChgBar(); loadData(); alert(ids.length+" cambio(s) guardado(s)."); }
+      }).catch(function(e) {
+        document.getElementById("errbar").textContent = "Error: " + e.message;
         document.getElementById("errbar").classList.add("on");
       });
+    }
+
+    if (payload._newAEName) {
+      var aeName = payload._newAEName;
+      delete payload._newAEName;
+      fetch(URL_BASE + "ae_team?name=eq."+encodeURIComponent(aeName)+"&select=id", {
+        headers: {"apikey":KEY,"Authorization":"Bearer "+KEY}
+      }).then(function(r){return r.json();})
+      .then(function(ae) {
+        if (ae && ae[0]) payload.ae_owner_id = ae[0].id;
+        doPatch(payload);
+      });
+    } else {
+      doPatch(payload);
+    }
   });
 }
 
-function effAE(r) { return changes[r.id] || r.ae; }
+/* ── Changes tracking ── */
+function setChange(id, field, val) {
+  if (!changes[id]) changes[id] = {};
+  changes[id][field] = val;
+  updChgBar();
+}
 
+function effAE(r)     { return (changes[r.id] && changes[r.id].ae     !== undefined) ? changes[r.id].ae     : r.ae; }
+function effStatus(r) { return (changes[r.id] && changes[r.id].status !== undefined) ? changes[r.id].status : r.status; }
+function effNotes(r)  { return (changes[r.id] && changes[r.id].notes  !== undefined) ? changes[r.id].notes  : r.notes; }
+
+function updChgBar() {
+  var n = Object.keys(changes).length;
+  document.getElementById("cbar").classList.toggle("on", n > 0);
+  document.getElementById("ctxt").textContent = n + (n===1?" cambio pendiente":" cambios pendientes");
+}
+function resetChg() { changes={}; updChgBar(); render(); }
+
+/* ── Filters ── */
 function filtered() {
   var q  = (document.getElementById("srch").value||"").toLowerCase();
   var fs = document.getElementById("fsec").value;
   var ft = document.getElementById("ftyp").value;
   var fr = document.getElementById("ftier").value;
   var fp = document.getElementById("fpais").value;
+  var fst= document.getElementById("fstatus").value;
   return allRows.filter(function(r) {
     if (!active[effAE(r)]) return false;
-    if (q  && r.n.toLowerCase().indexOf(q)<0 && r.s.toLowerCase().indexOf(q)<0) return false;
-    if (fs && r.s!==fs)    return false;
-    if (ft && r.t!==ft)    return false;
-    if (fr && r.tier!==fr) return false;
-    if (fp && r.c!==fp)    return false;
+    if (q   && r.n.toLowerCase().indexOf(q)<0 && r.s.toLowerCase().indexOf(q)<0) return false;
+    if (fs  && r.s!==fs)           return false;
+    if (ft  && r.t!==ft)           return false;
+    if (fr  && r.tier!==fr)        return false;
+    if (fp  && r.c!==fp)           return false;
+    if (fst && effStatus(r)!==fst) return false;
     return true;
   });
 }
 
 function sortFn(arr) {
   return arr.slice().sort(function(a,b) {
-    var d = sortDir, va, vb;
-    if (sortCol==="tier") { var o={T1:0,T2:1,T3:2}; return d*((o[a.tier]||3)-(o[b.tier]||3)); }
-    if (sortCol==="ae")   { va=effAE(a); vb=effAE(b); }
-    else                  { va=a[sortCol]||""; vb=b[sortCol]||""; }
+    var d=sortDir, va, vb;
+    if (sortCol==="tier")   { var o={T1:0,T2:1,T3:2}; return d*((o[a.tier]||3)-(o[b.tier]||3)); }
+    if (sortCol==="emp")    { va=a.emp||0; vb=b.emp||0; return d*(va-vb); }
+    if (sortCol==="ae")     { va=effAE(a); vb=effAE(b); }
+    if (sortCol==="status") { var so={caliente:0,tibio:1,frio:2,sin_contacto:3}; return d*((so[effStatus(a)]||4)-(so[effStatus(b)]||4)); }
+    else                    { va=a[sortCol]||""; vb=b[sortCol]||""; }
     return d*(va<vb?-1:va>vb?1:0);
   });
 }
 
 function sortBy(col) {
-  if (sortCol===col) { sortDir*=-1; } else { sortCol=col; sortDir=1; }
-  document.querySelectorAll("thead th").forEach(function(th) {
+  if (sortCol===col){sortDir*=-1;}else{sortCol=col;sortDir=1;}
+  document.querySelectorAll("thead th").forEach(function(th){
     th.classList.remove("sa","sd");
-    if (th.dataset.col===col) th.classList.add(sortDir===1?"sa":"sd");
+    if(th.dataset.col===col)th.classList.add(sortDir===1?"sa":"sd");
   });
   curPage=0; draw();
 }
 
+/* ── Render ── */
 function render() { curPage=0; draw(); }
 
 function draw() {
@@ -441,18 +560,29 @@ function draw() {
   document.getElementById("pinfo").textContent = "P\u00e1g. "+(curPage+1)+" / "+Math.max(1,Math.ceil(tot/PER));
   document.getElementById("btnP").disabled = curPage===0;
   document.getElementById("btnN").disabled = st+PER>=tot;
-  if (!sl.length) { document.getElementById("tb").innerHTML='<tr><td colspan="8" class="empty">Sin resultados</td></tr>'; return; }
+  if (!sl.length) { document.getElementById("tb").innerHTML='<tr><td colspan="10" class="empty">Sin resultados</td></tr>'; return; }
+
   var h="";
   sl.forEach(function(r) {
-    var cur = effAE(r);
-    var chg = !!changes[r.id];
-    var rrtag = r.t==="round_robin" ? '<span class="badge br" style="font-size:10px;margin-left:4px">RR</span>' : "";
-    var tb = {vertebral:"bv",named:"bn",round_robin:"br"}[r.t]||"br";
-    var tl = {vertebral:"Vertebral",named:"Named",round_robin:"Round Robin"}[r.t]||r.t;
-    var trb= {T1:"bt1",T2:"bt2",T3:"bt3"}[r.tier]||"br";
-    var opts = AES.map(function(ae) {
+    var cur    = effAE(r);
+    var curSt  = effStatus(r);
+    var curNt  = effNotes(r);
+    var chg    = !!changes[r.id];
+    var rrtag  = r.t==="round_robin"?'<span class="badge br" style="font-size:10px;margin-left:4px">RR</span>':"";
+    var tb     = {vertebral:"bv",named:"bn",round_robin:"br"}[r.t]||"br";
+    var tl     = {vertebral:"Vertebral",named:"Named",round_robin:"Round Robin"}[r.t]||r.t;
+    var trb    = {T1:"bt1",T2:"bt2",T3:"bt3"}[r.tier]||"br";
+    var empTxt = r.emp ? r.emp.toLocaleString() : "-";
+    var emoji  = STATUS_EMOJI[curSt]||"\u26AA";
+
+    var aeOpts = AES.map(function(ae){
       return '<option value="'+ae+'"'+(ae===cur?" selected":"")+">"+ae.charAt(0).toUpperCase()+ae.slice(1)+"</option>";
     }).join("");
+
+    var stOpts = ["caliente","tibio","frio","sin_contacto"].map(function(st){
+      return '<option value="'+st+'"'+(st===curSt?" selected":"")+'>'+(STATUS_EMOJI[st]||"")+" "+STATUS_LABEL[st]+"</option>";
+    }).join("");
+
     h += '<tr'+(chg?' class="chg"':'')+'>'+
       '<td class="nm">'+r.n+rrtag+'</td>'+
       '<td class="mu" style="font-size:12px">'+r.s+'</td>'+
@@ -460,8 +590,10 @@ function draw() {
       '<td><span class="badge '+tb+'">'+tl+'</span></td>'+
       '<td><span class="badge '+trb+'">'+r.tier+'</span></td>'+
       '<td class="mu">'+r.c+'</td>'+
-      '<td class="mu">'+r.src+'</td>'+
-      '<td><select class="ae-sel" onchange="chgAE(\''+r.id+'\',this.value)">'+opts+'</select></td>'+
+      '<td class="mu">'+empTxt+'</td>'+
+      '<td><select class="status-sel" title="'+STATUS_LABEL[curSt]+'" onchange="setChange(\''+r.id+'\',\'status\',this.value);this.closest(\'tr\').classList.add(\'chg\');">'+stOpts+'</select></td>'+
+      '<td><select class="ae-sel" onchange="setChange(\''+r.id+'\',\'ae\',this.value);this.closest(\'tr\').classList.add(\'chg\');">'+aeOpts+'</select></td>'+
+      '<td><input class="notes-input" value="'+curNt.replace(/"/g,"&quot;")+'" placeholder="Notas..." onchange="setChange(\''+r.id+'\',\'notes\',this.value);this.closest(\'tr\').classList.add(\'chg\');"></td>'+
       '</tr>';
   });
   document.getElementById("tb").innerHTML = h;
@@ -469,33 +601,18 @@ function draw() {
 
 function pg(d) { var t=filtered().length; curPage=Math.max(0,Math.min(curPage+d,Math.ceil(t/PER)-1)); draw(); }
 
-function chgAE(id,newAE) {
-  var r=allRows.find(function(x){return x.id===id;});
-  if (!r) return;
-  if (newAE===r.ae) { delete changes[id]; } else { changes[id]=newAE; }
-  updChgBar(); draw(); updMetrics();
-}
-function updChgBar() {
-  var n=Object.keys(changes).length;
-  document.getElementById("cbar").classList.toggle("on",n>0);
-  document.getElementById("ctxt").textContent=n+(n===1?" cuenta reasignada":" cuentas reasignadas");
-}
-function resetChg() { changes={}; updChgBar(); draw(); updMetrics(); }
-function expChg() {
-  var rows=Object.keys(changes).map(function(id) {
-    var a=allRows.find(function(x){return x.id===id;});
-    return [a.n,a.s,a.ae,changes[id],a.tier,a.c].map(function(v){return JSON.stringify(v||"");}).join(",");
-  });
-  if (!rows.length) { alert("Sin cambios."); return; }
-  dl(new Blob(["empresa,sector,ae_orig,ae_nuevo,tier,pais\n"+rows.join("\n")],{type:"text/csv"}),"reasignaciones.csv");
-}
-
+/* ── Coverage ── */
 function renderCov() {
   var cards="", trows="";
-  AES.filter(function(ae){return active[ae];}).forEach(function(ae) {
+  AES.filter(function(ae){return active[ae];}).forEach(function(ae){
     var ac=allRows.filter(function(r){return effAE(r)===ae;});
-    var tot=ac.length, t1=0, vert=0, named=0, rr=0;
-    ac.forEach(function(r){if(r.tier==="T1")t1++;if(r.t==="vertebral")vert++;else if(r.t==="named")named++;else rr++;});
+    var tot=ac.length,t1=0,vert=0,named=0,rr=0,hot=0,warm=0;
+    ac.forEach(function(r){
+      if(r.tier==="T1")t1++;
+      if(r.t==="vertebral")vert++;else if(r.t==="named")named++;else rr++;
+      var st=effStatus(r);
+      if(st==="caliente")hot++;else if(st==="tibio")warm++;
+    });
     var lbl=ae.charAt(0).toUpperCase()+ae.slice(1);
     var bg=AEBG[ae],tx=AETX[ae],cl=AECL[ae];
     var pV=Math.round(vert/Math.max(tot,1)*100);
@@ -506,9 +623,9 @@ function renderCov() {
       '<span class="aes" style="background:'+bg+';color:'+tx+'">'+tot+' cuentas</span></div>'+
       '<div class="cov-stats">'+
       '<div class="cs"><div class="cs-v">'+vert+'</div><div class="cs-l">Vertebral</div></div>'+
-      '<div class="cs"><div class="cs-v">'+named+'</div><div class="cs-l">Named</div></div>'+
-      '<div class="cs"><div class="cs-v">'+rr+'</div><div class="cs-l">RR</div></div>'+
-      '<div class="cs"><div class="cs-v">'+t1+'</div><div class="cs-l">Tier 1</div></div></div>'+
+      '<div class="cs"><div class="cs-v">'+t1+'</div><div class="cs-l">Tier 1</div></div>'+
+      '<div class="cs"><div class="cs-v" style="color:#27AE60">'+hot+'</div><div class="cs-l">Caliente</div></div>'+
+      '<div class="cs"><div class="cs-v" style="color:#F39C12">'+warm+'</div><div class="cs-l">Tibio</div></div></div>'+
       '<div class="pbar">'+
       '<div class="pb-seg" style="flex:'+pV+';background:'+cl+';opacity:.9"></div>'+
       '<div class="pb-seg" style="flex:'+pN+';background:'+cl+';opacity:.55"></div>'+
@@ -518,23 +635,25 @@ function renderCov() {
     trows+='<tr><td><span class="aes" style="background:'+bg+';color:'+tx+'">'+lbl+'</span></td>'+
       '<td style="font-weight:500">'+tot+'</td><td>'+vert+'</td><td>'+named+'</td><td>'+rr+'</td>'+
       '<td>'+t1+'</td><td>'+(tot-t1)+'</td>'+
+      '<td style="color:#27AE60;font-weight:500">'+hot+'</td>'+
+      '<td style="color:#F39C12;font-weight:500">'+warm+'</td>'+
       '<td class="mu" style="font-size:11px">'+(VERT[ae]||[]).join(", ")+'</td></tr>';
   });
   document.getElementById("covGrid").innerHTML=cards;
   document.getElementById("covB").innerHTML=trows;
 }
 
+/* ── Sectors ── */
 function renderSect() {
   var sm={};
   allRows.forEach(function(r){
     if(!sm[r.s])sm[r.s]={total:0,t1:0,t:r.t,ae:effAE(r),names:[]};
-    sm[r.s].total++;
-    if(r.tier==="T1")sm[r.s].t1++;
+    sm[r.s].total++;if(r.tier==="T1")sm[r.s].t1++;
     if(sm[r.s].names.length<3)sm[r.s].names.push(r.n);
   });
-  var sorted_s=Object.entries(sm).sort(function(a,b){return b[1].total-a[1].total;});
+  var ss=Object.entries(sm).sort(function(a,b){return b[1].total-a[1].total;});
   var h="";
-  sorted_s.forEach(function(e){
+  ss.forEach(function(e){
     var s=e[0],d=e[1];
     var tb={vertebral:"bv",named:"bn",round_robin:"br"}[d.t]||"br";
     var tl={vertebral:"Vertebral",named:"Named",round_robin:"Round Robin"}[d.t]||d.t;
@@ -549,6 +668,78 @@ function renderSect() {
   document.getElementById("sectB").innerHTML=h;
 }
 
+/* ── Scoring ── */
+function renderScoring() {
+  // 1. Peso total por AE (suma scoring de sectores vertebrales)
+  var aeScore = {david:0, daniela:0, chema:0, juanjo:0};
+  SECTOR_SCORING.forEach(function(s){
+    if(s.ae && aeScore[s.ae] !== undefined) aeScore[s.ae] += s.scoring;
+  });
+  var maxScore = Math.max.apply(null, Object.values(aeScore));
+
+  var barHtml = "";
+  AES.forEach(function(ae){
+    var sc = aeScore[ae] || 0;
+    var pct = Math.round(sc/maxScore*100);
+    var lbl = ae.charAt(0).toUpperCase()+ae.slice(1);
+    barHtml += '<div class="score-bar-row">'+
+      '<span class="score-bar-label">'+lbl+'</span>'+
+      '<div class="score-bar-track"><div class="score-bar-fill" style="width:'+pct+'%;background:'+AECL[ae]+'"></div></div>'+
+      '<span class="score-bar-val">'+sc.toFixed(2)+'</span></div>';
+  });
+  document.getElementById("scoreByAE").innerHTML = barHtml;
+
+  // 2. T1 por AE
+  var aeT1 = {david:0,daniela:0,chema:0,juanjo:0};
+  allRows.forEach(function(r){
+    var ae = effAE(r);
+    if(r.tier==="T1" && aeT1[ae]!==undefined) aeT1[ae]++;
+  });
+  var maxT1 = Math.max.apply(null, Object.values(aeT1));
+
+  var t1Html = "";
+  AES.forEach(function(ae){
+    var n = aeT1[ae]||0;
+    var pct = maxT1>0 ? Math.round(n/maxT1*100) : 0;
+    var lbl = ae.charAt(0).toUpperCase()+ae.slice(1);
+    t1Html += '<div class="score-bar-row">'+
+      '<span class="score-bar-label">'+lbl+'</span>'+
+      '<div class="score-bar-track"><div class="score-bar-fill" style="width:'+pct+'%;background:'+AECL[ae]+'"></div></div>'+
+      '<span class="score-bar-val">'+n+'</span></div>';
+  });
+  document.getElementById("scoreT1").innerHTML = t1Html;
+
+  // 3. Tabla sectores con scoring
+  var sectCounts = {};
+  allRows.forEach(function(r){
+    if(!sectCounts[r.s]) sectCounts[r.s]={total:0,t1:0};
+    sectCounts[r.s].total++;
+    if(r.tier==="T1") sectCounts[r.s].t1++;
+  });
+
+  var sorted = SECTOR_SCORING.slice().sort(function(a,b){return b.scoring-a.scoring;});
+  var h="";
+  sorted.forEach(function(s){
+    var cnt = sectCounts[s.s] || {total:0,t1:0};
+    var abg = s.ae ? AEBG[s.ae] : "var(--gy-bg)";
+    var atx = s.ae ? AETX[s.ae] : "var(--gy-tx)";
+    var al  = s.ae ? s.ae.charAt(0).toUpperCase()+s.ae.slice(1) : "RR";
+    var tb  = {vertebral:"bv",named:"bn",round_robin:"br"}[s.t]||"br";
+    var intColor = s.int==="Muy alta"?"color:#27AE60;font-weight:500":s.int==="Alta"?"color:#F39C12":s.int==="Baja"?"color:#999":"";
+    h += '<tr>'+
+      '<td class="nm" style="font-size:12px">'+s.s+'</td>'+
+      '<td style="font-weight:500;font-size:13px">'+s.scoring.toFixed(2)+'</td>'+
+      '<td class="mu">'+s.pib+'%</td>'+
+      '<td style="'+intColor+';font-size:12px">'+s.int+'</td>'+
+      '<td>'+cnt.total+'</td>'+
+      '<td>'+cnt.t1+'</td>'+
+      '<td><span class="aes" style="background:'+abg+';color:'+atx+'">'+al+'</span></td>'+
+      '</tr>';
+  });
+  document.getElementById("scoreSectB").innerHTML=h;
+}
+
+/* ── Metrics ── */
 function updMetrics() {
   var tot=allRows.length;
   document.getElementById("mTot").textContent=tot.toLocaleString();
@@ -557,13 +748,14 @@ function updMetrics() {
     var ae=c[0];
     var ac=allRows.filter(function(r){return effAE(r)===ae;});
     var t1=ac.filter(function(r){return r.tier==="T1";}).length;
-    var rr=ac.filter(function(r){return r.t==="round_robin";}).length;
+    var hot=ac.filter(function(r){return effStatus(r)==="caliente";}).length;
     document.getElementById(c[1]).textContent=ac.length.toLocaleString();
-    document.getElementById(c[2]).textContent=t1+" T1 \u00b7 "+Math.round(rr/Math.max(ac.length,1)*100)+"% RR";
+    document.getElementById(c[2]).textContent=t1+" T1 \u00b7 \u{1F7E2}"+hot;
     document.getElementById(c[3]).style.width=Math.round(ac.length/Math.max(tot,1)*100)+"%";
   });
 }
 
+/* ── Filters build ── */
 function buildFilters() {
   var sects=[],paises=[];
   allRows.forEach(function(r){
@@ -575,16 +767,19 @@ function buildFilters() {
   document.getElementById("fpais").innerHTML='<option value="">Todos</option>'+paises.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join("");
 }
 
+/* ── Nav ── */
 function sTab(btn) {
   curTab=btn.dataset.tab;
   document.querySelectorAll(".ntab").forEach(function(t){t.classList.remove("on");});
   btn.classList.add("on");
   document.querySelectorAll(".panel").forEach(function(p){p.classList.remove("on");});
   document.getElementById("panel-"+curTab).classList.add("on");
-  document.getElementById("aebar").style.display=curTab==="sectors"?"none":"";
+  var hideBar = curTab==="sectors"||curTab==="scoring";
+  document.getElementById("aebar").style.display = hideBar?"none":"";
   if(curTab==="accounts")draw();
   else if(curTab==="coverage")renderCov();
-  else renderSect();
+  else if(curTab==="sectors")renderSect();
+  else if(curTab==="scoring")renderScoring();
 }
 
 function fAE(btn) {
@@ -596,13 +791,25 @@ function fAE(btn) {
 }
 
 function switchRole(v) {
+  curRole=v;
   var rm={manager:"Manager",david:"David (AE)",daniela:"Daniela (AE)",chema:"Chema (AE)",juanjo:"Juanjo (AE)"};
   document.getElementById("rdsp").textContent=rm[v]||v;
   document.getElementById("rdsp").className="rbadge "+(v==="manager"?"rb-mgr":"rb-ae");
+  // Scoring tab solo visible para manager
+  document.querySelectorAll(".mgr-only").forEach(function(el){
+    el.style.display = v==="manager"?"":"none";
+  });
   if(v!=="manager"){
     active={david:false,daniela:false,chema:false,juanjo:false};
     active[v]=true;
-    document.querySelectorAll("#aebar .pill").forEach(function(p){p.classList.toggle("on",p.dataset.ae===v);p.classList.toggle("off",p.dataset.ae!==v);});
+    document.querySelectorAll("#aebar .pill").forEach(function(p){
+      p.classList.toggle("on",p.dataset.ae===v);
+      p.classList.toggle("off",p.dataset.ae!==v);
+    });
+    // Si estaba en scoring, volver a accounts
+    if(curTab==="scoring"){
+      document.querySelector('[data-tab="accounts"]').click();
+    }
   } else {
     active={david:true,daniela:true,chema:true,juanjo:true};
     document.querySelectorAll("#aebar .pill").forEach(function(p){p.classList.add("on");p.classList.remove("off");});
@@ -610,53 +817,23 @@ function switchRole(v) {
   draw();updMetrics();
 }
 
+/* ── Export ── */
 function expCSV() {
   var rows=sortFn(filtered());
-  var csv="empresa,sector,ae,asignacion,tier,pais,fuente\n"+rows.map(function(r){
-    return [r.n,r.s,effAE(r),r.t,r.tier,r.c,r.src].map(function(v){return JSON.stringify(String(v||""));}).join(",");
+  var csv="empresa,sector,ae,asignacion,tier,empleados,pais,estado,notas\n"+rows.map(function(r){
+    return [r.n,r.s,effAE(r),r.t,r.tier,r.emp||"",r.c,effStatus(r),effNotes(r)]
+      .map(function(v){return JSON.stringify(String(v||""));}).join(",");
   }).join("\n");
   dl(new Blob([csv],{type:"text/csv"}),"emburse_ata_latam.csv");
 }
 function dl(b,n){var u=URL.createObjectURL(b);var a=document.createElement("a");a.href=u;a.download=n;a.click();URL.revokeObjectURL(u);}
 
+/* ── Init ── */
 document.getElementById("ts").textContent=new Date().toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"});
-
-var PWD_HASH = "b1b17b68e38d3e0a3c56e44d16ad90a3f6943e23b85d82a09a28f84d04e3ebf3";
-
-function hashStr(s) {
-  var hash = 0;
-  for (var i = 0; i < s.length; i++) {
-    var c = s.charCodeAt(i);
-    hash = ((hash << 5) - hash) + c;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16);
+if(sessionStorage.getItem("ata_auth")==="1"){
+  document.getElementById("loginOverlay").style.display="none";
+  loadData();
 }
-
-function checkLogin() {
-  var val = document.getElementById("loginInput").value;
-  // Simple check — contraseña "2026"
-  if (val === "2026") {
-    document.getElementById("loginOverlay").style.display = "none";
-    sessionStorage.setItem("ata_auth", "1");
-    loadData();
-  } else {
-    document.getElementById("loginErr").textContent = "Contraseña incorrecta";
-    document.getElementById("loginInput").value = "";
-    document.getElementById("loginInput").focus();
-  }
-}
-
-// Comprobar si ya estaba autenticado en esta sesión
-function initAuth() {
-  if (sessionStorage.getItem("ata_auth") === "1") {
-    document.getElementById("loginOverlay").style.display = "none";
-    loadData();
-  }
-  // Si no, el overlay se queda visible — no llamar loadData()
-}
-
-initAuth();
 </script>
 </body>
 </html>
