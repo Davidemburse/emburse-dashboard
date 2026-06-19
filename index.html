@@ -116,6 +116,16 @@ td.mu{color:var(--tx2);font-size:12px;}
 .pb-seg{height:100%;}
 .pbar-note{font-size:10px;color:var(--tx3);margin-top:5px;}
 .vtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
+
+.login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--rl);padding:32px 36px;width:320px;text-align:center;}
+.login-logo{font-size:15px;font-weight:500;margin-bottom:8px;}
+.login-sub{font-size:12px;color:var(--tx2);margin-bottom:24px;}
+.login-input{width:100%;padding:9px 12px;font-size:14px;font-family:inherit;border:0.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--tx);margin-bottom:12px;text-align:center;letter-spacing:4px;}
+.login-input:focus{outline:none;border-color:var(--tx2);}
+.login-btn{width:100%;padding:9px;font-size:13px;font-family:inherit;border:none;border-radius:var(--r);background:var(--td-tx);color:#fff;cursor:pointer;font-weight:500;}
+.login-btn:hover{opacity:.85;}
+.login-err{font-size:12px;color:var(--co-tx);margin-top:8px;min-height:16px;}
 </style>
 </head>
 <body>
@@ -250,6 +260,18 @@ td.mu{color:var(--tx2);font-size:12px;}
 </div>
 
 </div>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Territory Dashboard &middot; Emburse LATAM</div>
+    <div class="login-sub">Introduce la contrase&ntilde;a de acceso</div>
+    <input class="login-input" type="password" id="loginInput" placeholder="&bull;&bull;&bull;&bull;" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Acceder</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
 <script>
 var URL_BASE = "https://ocbckgfjtfphsgdnwvmd.supabase.co/rest/v1/";
 var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jYmNrZ2ZqdGZwaHNnZG53dm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDA3NjQsImV4cCI6MjA5NzM3Njc2NH0.1jjf71Ttfhkdy_8ucHld3OdsBEQafc9tg8C13GC35vY";
@@ -598,7 +620,43 @@ function expCSV() {
 function dl(b,n){var u=URL.createObjectURL(b);var a=document.createElement("a");a.href=u;a.download=n;a.click();URL.revokeObjectURL(u);}
 
 document.getElementById("ts").textContent=new Date().toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"});
-loadData();
+
+var PWD_HASH = "b1b17b68e38d3e0a3c56e44d16ad90a3f6943e23b85d82a09a28f84d04e3ebf3";
+
+function hashStr(s) {
+  var hash = 0;
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+function checkLogin() {
+  var val = document.getElementById("loginInput").value;
+  // Simple check — contraseña "2026"
+  if (val === "2026") {
+    document.getElementById("loginOverlay").style.display = "none";
+    sessionStorage.setItem("ata_auth", "1");
+    loadData();
+  } else {
+    document.getElementById("loginErr").textContent = "Contraseña incorrecta";
+    document.getElementById("loginInput").value = "";
+    document.getElementById("loginInput").focus();
+  }
+}
+
+// Comprobar si ya estaba autenticado en esta sesión
+function initAuth() {
+  if (sessionStorage.getItem("ata_auth") === "1") {
+    document.getElementById("loginOverlay").style.display = "none";
+    loadData();
+  }
+  // Si no, el overlay se queda visible — no llamar loadData()
+}
+
+initAuth();
 </script>
 </body>
 </html>
